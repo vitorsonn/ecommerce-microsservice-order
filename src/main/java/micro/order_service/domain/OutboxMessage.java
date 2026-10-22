@@ -32,6 +32,10 @@ public class OutboxMessage {
 
     private LocalDateTime createdAt;
 
+    @Column(name = "retry_count", nullable = false)
+    @Builder.Default
+    private int retryCount = 0;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
