@@ -3,7 +3,9 @@ package micro.order_service.application;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import micro.order_service.domain.Order;
+import micro.order_service.domain.OrderStatus;
 import micro.order_service.domain.OutboxMessage;
 import micro.order_service.infra.persistence.OrderRepository;
 import micro.order_service.infra.persistence.OutboxRepository;
@@ -13,6 +15,9 @@ import org.springframework.stereotype.Service;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.UUID;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -55,6 +60,21 @@ public class OrderService {
         }
 
         return savedOrder;
+    }
+
+    @Transactional
+    public void updateOrderStatus(UUID orderId, String paymentStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + orderId));
+
+        if ("APROVADO".equalsIgnoreCase(paymentStatus)) {
+            order.setStatus(OrderStatus.PAGO);
+        } else {
+            order.setStatus(OrderStatus.CANCELADO);
+        }
+
+        orderRepository.save(order);
+        log.info("Status do Pedido ID {} atualizado com sucesso para: {}", orderId, order.getStatus());
     }
 
 }

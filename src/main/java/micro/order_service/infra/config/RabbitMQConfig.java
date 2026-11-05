@@ -14,6 +14,11 @@ public class RabbitMQConfig {
     public static final String QUEUE_PAYMENT_PROCESS = "payment.process.queue";
     public static final String EXCHANGE_ORDERS = "orders.exchange";
     public static final String ROUTING_KEY_ORDER_CREATED = "order.created";
+    public static final String QUEUE_ORDER_PAYMENT_RESPONSE = "order.payment-response.queue";
+    public static final String EXCHANGE_PAYMENTS = "payments.exchange";
+    public static final String ROUTING_KEY_PAYMENT_PROCESSED = "payment.processed";
+
+
 
 
 
@@ -23,14 +28,23 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue paymentQueue(){
-        return QueueBuilder.durable(QUEUE_PAYMENT_PROCESS).build();
+    public TopicExchange paymentsExchange() {
+        return new TopicExchange(EXCHANGE_PAYMENTS);
     }
 
     @Bean
-    public Binding bindingPaymentQueue(Queue paymentQueue, TopicExchange ordersExchange) {
-        return BindingBuilder.bind(paymentQueue).to(ordersExchange).with(ROUTING_KEY_ORDER_CREATED);
+    public Queue orderPaymentResponseQueue() {
+        return QueueBuilder.durable(QUEUE_ORDER_PAYMENT_RESPONSE).build();
     }
+
+
+    @Bean
+    public Binding bindingOrderPaymentResponse(Queue orderPaymentResponseQueue, TopicExchange paymentsExchange) {
+        return BindingBuilder.bind(orderPaymentResponseQueue)
+                .to(paymentsExchange)
+                .with(ROUTING_KEY_PAYMENT_PROCESSED);
+    }
+
     @Bean
     public JacksonJsonMessageConverter messageConverter(JsonMapper jsonMapper) {
         return new JacksonJsonMessageConverter(jsonMapper);
